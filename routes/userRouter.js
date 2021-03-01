@@ -16,7 +16,7 @@ router.get("/", (req, res, next) => {
 
 router
   .post("/login", userLogin)
-  .post("/logup", userSignUp)
+  .post("/register", userSignUp)
   .post("/logout/:jwt", userLogout);
 
 router.post("/favs/:id", updateFav).get("/favs", getFavs);

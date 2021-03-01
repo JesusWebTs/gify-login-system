@@ -50,7 +50,7 @@ const findUserSession = (jwt, cb) => {
     .catch((err) => {
       /* console.log(err); */
     });
-};
+}; // check
 
 const unsetUserSesion = (jwt, cb) => {
   return sessionModel

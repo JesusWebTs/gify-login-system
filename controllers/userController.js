@@ -4,7 +4,7 @@ import {
   deleteFav,
   findFav,
   findAllFavs,
-  findUserById,
+  createUser,
 } from "../models/UserModel.js";
 import {
   setUserSession,
@@ -12,7 +12,7 @@ import {
   findUserIdByJWT,
 } from "../models/SessionModel.js";
 
-const userLogin = async (req, res, next) => {
+const userLogin = async (req, res) => {
   const userBody = req.body;
   const { userName, password, ...data } = userBody;
   const cb = (data) => {
@@ -53,18 +53,26 @@ const userLogin = async (req, res, next) => {
 
   loginUser(user, cb);
 };
-
-const userSignUp = (req, res, next) => {
-  const user = req.data;
+const userSignUp = async (req, res) => {
+  const { userName, password } = req.body;
   const cb = (data) => {
-    console.log("user was created");
-    res.status(200);
+    res.status(data.status);
     res.json(data);
   };
-  logupUser(user, cb);
+  const existUser = await findUserByUsername(userName);
+  let userWasCreated;
+  if (!existUser) {
+    userWasCreated = await createUser({ userName, password }, cb);
+  } else {
+    return cb({
+      userId: true,
+      error: true,
+      errorMessage: "User already exist",
+      status: 409,
+    });
+  }
 };
-
-const userLogout = (req, res, next) => {
+const userLogout = async (req, res) => {
   const { jwt } = req.params;
   const cb = (data) => {
     res.status(200);
@@ -72,8 +80,7 @@ const userLogout = (req, res, next) => {
   };
   unsetUserSesion(jwt, cb);
 };
-
-const updateFav = async (req, res, next) => {
+const updateFav = async (req, res) => {
   const { jwt } = req.body;
   const imgId = req.params.id;
   const cb = (data) => {
@@ -102,8 +109,7 @@ const updateFav = async (req, res, next) => {
     });
   }
 };
-
-const getFavs = async (req, res, next) => {
+const getFavs = async (req, res) => {
   const jwt = req.header("Authorization");
   const cb = (data) => {
     res.status(data.status);

@@ -1,37 +1,66 @@
 import { userModel } from "./schemas/userSchema.js";
 
 const findUserByUsername = async (userName, cb) => {
+  //Check
   const user = await userModel
     .findOne({ userName })
     .then((user) => {
-      return user;
+      if (user) return user;
+      return false;
     })
     .catch((err) => {
       throw Error("error");
+      cb();
     });
   return user;
-};
+}; // check
 const findUserById = async (id, cb) => {
+  // Check
   const user = await userModel
     .findById(id)
     .then((user) => {
       return user;
     })
     .catch((err) => {
+      cb();
       throw Error("Internal server error: ->", { err });
     });
   return user;
-};
-
-const signUpUser = (data, cb) => {
+}; // check
+const createUser = (data, cb) => {
   const { userName, password } = data;
-
-  return;
-  /*  userModel.create(data).then((data) => {
-    cb(data);
-  }); */
+  userModel
+    .create({ userName, password })
+    .then((res) => { 
+      if (res) {
+        cb({
+          userId: true,
+          error: false,
+          errorMessage: "",
+          status: 201,
+        });
+        return true;
+      }
+      cb({
+        userId: true,
+        error: true,
+        errorMessage: "User already exist",
+        status: 409,
+      });
+      return false;
+    })
+    .catch((err) => {
+      const errorMessage =
+        err.errorMessage || "Internal Server Error at createUser";
+      cb({
+        userId: false,
+        error: true,
+        errorMessage,
+        status: 500,
+      });
+      throw new Error(errorMessage, { ...err });
+    });
 };
-
 const createFav = async (_id, imgId, cb) => {
   return userModel
     .findOneAndUpdate(
@@ -133,8 +162,7 @@ const deleteFav = async (_id, imgId, cb) => {
       throw new Error(errorMessage, { ...err });
     });
 };
-
-const findFav = (userId, imgId, cb) => {
+const findFav = async (userId, imgId, cb) => {
   return userModel
     .findOne(
       { _id: userId },
@@ -173,7 +201,7 @@ const findFav = (userId, imgId, cb) => {
       throw new Error(errorMessage, { ...err });
     });
 };
-const findAllFavs = (userId, cb) => {
+const findAllFavs = async (userId, cb) => {
   return userModel
     .findOne(
       { _id: userId },
@@ -217,7 +245,7 @@ const findAllFavs = (userId, cb) => {
 
 export {
   findUserByUsername,
-  signUpUser,
+  createUser,
   createFav,
   deleteFav,
   findUserById,
